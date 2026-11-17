@@ -16,6 +16,10 @@ class AndroidId:
         else:
             Logger.error("Please make sure Waydroid is running and Gapps has been installed!")
             return
-        print(queryout.replace("android_id|", "").strip())
+        android_id = queryout.replace("android_id|", "").strip()
+        if not android_id:
+            Logger.error("Android ID not found. Make sure GApps is installed and Play Store has been opened once.")
+            return
+        print(android_id)
         print("   ^----- Open https://google.com/android/uncertified/?pli=1")
         print("          Login with your google id then submit the form with id shown above")

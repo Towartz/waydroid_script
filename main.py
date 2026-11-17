@@ -148,6 +148,8 @@ def remove_app(args):
     if not container.use_overlayfs():
         copy_dir = "/tmp/waydroid"
         container.stop()
+        mount("system", copy_dir)
+        mount("vendor", copy_dir)
 
     for item in remove_list:
         item.uninstall()

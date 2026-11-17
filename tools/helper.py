@@ -2,7 +2,7 @@ import gzip
 import os
 import re
 import platform
-import re
+import shutil
 import subprocess
 import sys
 import requests
@@ -54,40 +54,32 @@ def run(args: list, env: Optional[str] = None, ignore: Optional[str] = None):
 
 # execute on waydroid shell
 def shell(arg: str, env: Optional[str] = None):
+    cmds = [
+        "export BOOTCLASSPATH=/apex/com.android.art/javalib/core-oj.jar:/apex/com.android.art/javalib/core-libart.jar:/apex/com.android.art/javalib/core-icu4j.jar:/apex/com.android.art/javalib/okhttp.jar:/apex/com.android.art/javalib/bouncycastle.jar:/apex/com.android.art/javalib/apache-xml.jar:/system/framework/framework.jar:/system/framework/ext.jar:/system/framework/telephony-common.jar:/system/framework/voip-common.jar:/system/framework/ims-common.jar:/system/framework/framework-atb-backward-compatibility.jar:/apex/com.android.conscrypt/javalib/conscrypt.jar:/apex/com.android.media/javalib/updatable-media.jar:/apex/com.android.mediaprovider/javalib/framework-mediaprovider.jar:/apex/com.android.os.statsd/javalib/framework-statsd.jar:/apex/com.android.permission/javalib/framework-permission.jar:/apex/com.android.sdkext/javalib/framework-sdkextensions.jar:/apex/com.android.wifi/javalib/framework-wifi.jar:/apex/com.android.tethering/javalib/framework-tethering.jar"
+    ]
+    if env:
+        cmds.append(env)
+    cmds.append(arg)
+    payload = ("\n".join(cmds) + "\n").encode("utf-8")
+
     a = subprocess.Popen(
         args=["sudo", "waydroid", "shell"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE
     )
-    subprocess.Popen(
-        args=["echo", "export BOOTCLASSPATH=/apex/com.android.art/javalib/core-oj.jar:/apex/com.android.art/javalib/core-libart.jar:/apex/com.android.art/javalib/core-icu4j.jar:/apex/com.android.art/javalib/okhttp.jar:/apex/com.android.art/javalib/bouncycastle.jar:/apex/com.android.art/javalib/apache-xml.jar:/system/framework/framework.jar:/system/framework/ext.jar:/system/framework/telephony-common.jar:/system/framework/voip-common.jar:/system/framework/ims-common.jar:/system/framework/framework-atb-backward-compatibility.jar:/apex/com.android.conscrypt/javalib/conscrypt.jar:/apex/com.android.media/javalib/updatable-media.jar:/apex/com.android.mediaprovider/javalib/framework-mediaprovider.jar:/apex/com.android.os.statsd/javalib/framework-statsd.jar:/apex/com.android.permission/javalib/framework-permission.jar:/apex/com.android.sdkext/javalib/framework-sdkextensions.jar:/apex/com.android.wifi/javalib/framework-wifi.jar:/apex/com.android.tethering/javalib/framework-tethering.jar"],
-        stdout=a.stdin,
-        stdin=subprocess.PIPE
-    ).communicate()
-
-    if env:
-        subprocess.Popen(
-            args=["echo", env],
-            stdout=a.stdin,
-            stdin=subprocess.PIPE
-        ).communicate()
-
-    subprocess.Popen(
-        args=["echo", arg],
-        stdout=a.stdin,
-        stdin=subprocess.PIPE
-    ).communicate()
-
-    a.stdin.close()
-    if a.stderr.read():
-        Logger.error(a.stderr.read().decode('utf-8'))
+    stdout, stderr = a.communicate(input=payload)
+    if a.returncode != 0:
+        err_text = stderr.decode("utf-8", errors="replace").strip()
+        if err_text:
+            Logger.error(err_text)
         raise subprocess.CalledProcessError(
             returncode=a.returncode,
             cmd=a.args,
-            stderr=a.stderr
+            output=stdout,
+            stderr=stderr
         )
-    return a.stdout.read().decode("utf-8")
+    return stdout.decode("utf-8", errors="replace")
 
 def download_file(url, f_name):
     md5 = ""
@@ -144,3 +136,12 @@ def restore(path):
     with gzip.GzipFile(gz_filename) as f_gz:
         with open(path, "wb") as f:
             f.writelines(f_gz)
+
+
+def remove_data_dirs(packages):
+    """Remove app data directories under Waydroid's data partition for the given package names."""
+    data_dir = get_data_dir()
+    for pkg in packages:
+        for base in (os.path.join(data_dir, "data", pkg), os.path.join(data_dir, "user_de", "0", pkg)):
+            if os.path.isdir(base):
+                shutil.rmtree(base, ignore_errors=True)

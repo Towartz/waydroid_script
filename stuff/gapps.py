@@ -1,7 +1,7 @@
 import os
 import shutil
 from stuff.general import General
-from tools.helper import run
+from tools.helper import remove_data_dirs, run
 
 
 class Gapps(General):
@@ -65,6 +65,7 @@ class Gapps(General):
         "priv-app/GoogleContactsSyncAdapter",
         "priv-app/GooglePartnerSetup",
         "product/overlay/PlayStoreOverlay.apk",
+        "product/overlay/GmsOverlay.apk",
         "product/overlay/GmsOverlay.apk.apk",
         "product/overlay/GmsSettingsProviderOverlay.apk",
         "system_ext/etc/permissions/privapp-permissions-google-system-ext.xml",
@@ -170,3 +171,24 @@ class Gapps(General):
                 shutil.copy2(src_file_path, dst_file_path)
                 if os.path.splitext(dst_file_path)[1].lower() == ".apk":
                     self.extract_app_lib(dst_file_path)
+
+    def extra2(self):
+        remove_data_dirs([
+            "com.google.android.gsf",
+            "com.google.android.gms",
+            "com.android.vending",
+            "com.google.android.feedback",
+            "com.google.android.backuptransport",
+            "com.google.android.onetimeinitializer",
+            "com.google.android.partnersetup",
+            "com.google.android.configupdater",
+            "com.google.android.ext.services",
+            "com.google.android.ext.shared",
+            "com.google.android.syncadapters.calendar",
+            "com.google.android.syncadapters.contacts",
+            "com.google.android.setupwizard",
+            "com.google.android.apps.restore",
+            "com.google.android.googlequicksearchbox",
+            "com.google.android.projection.gearhead",
+            "com.google.android.carriersetup",
+        ])

@@ -1,6 +1,7 @@
 import os
 import shutil
 from stuff.general import General
+from tools.helper import remove_data_dirs
 from tools.logger import Logger
 
 
@@ -174,3 +175,20 @@ service microg_service /system/bin/sh /system/bin/npem
                 shutil.rmtree(file)
             elif os.path.isfile(file):
                 os.remove(file)
+        remove_data_dirs([
+            "com.google.android.gms",
+            "com.google.android.gsf",
+            "com.android.vending",
+            "org.microg.gms.droidguard",
+            "org.microg.nlp",
+            "org.microg.nlp.backend.ichnaea",
+            "org.microg.nlp.backend.nominatim",
+            "org.microg.unifiednlp",
+            "com.aurora.store",
+            "com.aurora.adroid",
+            "com.aurora.services",
+            "org.fdroid.fdroid.privileged",
+            "com.etesync.syncadapter",
+            "com.google.android.syncadapters.calendar",
+            "com.google.android.syncadapters.contacts",
+        ])
