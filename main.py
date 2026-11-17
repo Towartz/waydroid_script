@@ -215,24 +215,25 @@ def interact():
     if not android_version:
         exit()
     args.android_version = android_version
+    install_choices = ["gapps", "microg", "libndk", "libhoudini", "magisk", "smartdock", "fdroidpriv", "widevine",]
+    hack_choices = []
+    if android_version == "11":
+        hack_choices.extend(["nodataperm", "hidestatusbar"])
+
+    action_choices = [
+        "Install",
+        "Remove",
+        *(["Hack"] if hack_choices else []),
+        "Get Google Device ID to Get Certified"
+    ]
     action = inquirer.select(
         message="Please select an action",
-        choices=[
-            "Install",
-            "Remove",
-            "Hack",
-            "Get Google Device ID to Get Certified"
-        ],
+        choices=action_choices,
         instruction="([↑↓]: Select Item)",
         default=None,
     ).execute()
     if not action:
         exit()
-
-    install_choices = ["gapps", "microg", "libndk", "libhoudini", "magisk", "smartdock", "fdroidpriv", "widevine",]
-    hack_choices = []
-    if android_version=="11":
-        hack_choices.extend(["nodataperm", "hidestatusbar"])
 
     if action == "Install":
         apps = inquirer.checkbox(
